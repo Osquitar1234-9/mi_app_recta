@@ -1,75 +1,67 @@
 import dash
-from dash import dcc, html, Input, Output
+from dash import dcc, html
+from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 import numpy as np
+import os
 
 app = dash.Dash(__name__)
-server = app.server
+server = app.server  # Necesario para desplegar en Render
 
 app.layout = html.Div([
-    html.H1("Visualizador de recta: y = mx + b", style={"textAlign": "center"}),
+    html.H1("Interactividad con una recta"),
 
-    html.Div([
-        html.Label("Pendiente (m):"),
-        dcc.Slider(
-            id="m-slider",
-            min=-10,
-            max=10,
-            step=0.1,
-            value=1,
-            marks={i: str(i) for i in range(-10, 11)},
-            tooltip={"placement": "bottom", "always_visible": True}
-        ),
-    ], style={"margin": "20px"}),
+    html.Label("Pendiente (m):"),
+    dcc.Slider(
+        id='pendiente-slider',
+        min=-10,
+        max=10,
+        step=0.1,
+        value=1,
+        marks={i: str(i) for i in range(-10, 11)}
+    ),
+    html.Br(),
 
-    html.Div([
-        html.Label("Ordenada al origen (b):"),
-        dcc.Input(id="b-input", type="number", value=0, step=1)
-    ], style={"margin": "20px"}),
+    html.Label("Ordenada al origen (b):"),
+    dcc.Input(id='ordenada-input', type='number', value=0),
 
-    html.Div([
-        html.Label("Intersección con el eje X (x cuando y=0):"),
-        dcc.Input(id="x-intercept", type="text", readOnly=True)
-    ], style={"margin": "20px"}),
+    html.Br(), html.Br(),
+    html.Label("X-intersección:"),
+    dcc.Input(id='x-interseccion', type='text', value='', readOnly=True),
 
-    dcc.Graph(id="line-graph"),
-
-    html.Div(id="warning-message", style={"color": "red", "fontWeight": "bold"})
+    dcc.Graph(id='graph')
 ])
 
 @app.callback(
-    Output("line-graph", "figure"),
-    Output("x-intercept", "value"),
-    Output("warning-message", "children"),
-    Input("m-slider", "value"),
-    Input("b-input", "value")
+    [Output('x-interseccion', 'value'),
+     Output('graph', 'figure')],
+    [Input('pendiente-slider', 'value'),
+     Input('ordenada-input', 'value')]
 )
 def update_graph(m, b):
-    x_range = np.linspace(-50, 50, 500)
-    y_values = m * x_range + b
-
     if m == 0:
-        intercept_text = "Infinita (recta horizontal)"
-        warning = "La pendiente es cero. No hay intersección con el eje X."
+        x_int = 'Infinito'
     else:
-        x_int = -b / m
-        intercept_text = f"{x_int:.2f}"
-        warning = ""
+        if b is None:
+            b = 0
+        x_int = round(-b / m, 2)
+
+    x_range = np.linspace(-50, 50, 400)
+    y_values = m * x_range + b
 
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=x_range, y=y_values, mode='lines', name='Recta'))
+
     fig.update_layout(
-        title="Gráfico de la recta y = mx + b",
-        xaxis=dict(range=[-50, 50], title='x'),
-        yaxis=dict(range=[-50, 50], title='y'),
-        height=600
+        xaxis=dict(range=[-50, 50], title='X'),
+        yaxis=dict(range=[-50, 50], title='Y'),
+        title='Gráfico de la recta',
+        plot_bgcolor='white'
     )
 
-    return fig, intercept_text, warning
+    return str(x_int), fig
 
-if __name__ == "__main__":
-    import os
-
+# 🔥 IMPORTANTE: este bloque permite que Render detecte y use el puerto correctamente
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 8050))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    app.run(host="0.0.0.0", port=port, debug=True)
