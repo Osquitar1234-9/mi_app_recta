@@ -5,11 +5,11 @@ import plotly.graph_objs as go
 import numpy as np
 import os
 
-app = dash.Dash(__name__)
+app = dash.Dash(__name__, title="Interactividad con una recta en el plano")
 server = app.server  # Necesario para desplegar en Render
 
 app.layout = html.Div([
-    html.H1("Interactividad con una recta"),
+    html.H1("Interactividad con una recta en el plano"),
 
     html.Label("Pendiente (m):"),
     dcc.Slider(
@@ -53,11 +53,25 @@ def update_graph(m, b):
     fig.add_trace(go.Scatter(x=x_range, y=y_values, mode='lines', name='Recta'))
 
     fig.update_layout(
-        xaxis=dict(range=[-50, 50], title='X'),
-        yaxis=dict(range=[-50, 50], title='Y'),
-        title='Gráfico de la recta',
-        plot_bgcolor='white'
-    )
+    xaxis=dict(
+        range=[-50, 50],
+        title='X',
+        showline=True,
+        linecolor='black',
+        zeroline=True,
+        zerolinecolor='black'
+    ),
+    yaxis=dict(
+        range=[-50, 50],
+        title='Y',
+        showline=True,
+        linecolor='black',
+        zeroline=True,
+        zerolinecolor='black'
+    ),
+    title='Gráfico de la recta',
+    plot_bgcolor='white'
+)
 
     return str(x_int), fig
 
